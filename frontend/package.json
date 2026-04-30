@@ -1,0 +1,37 @@
+{
+  "name": "furja-frontend",
+  "version": "1.0.0",
+  "description": "Furja Live Streaming Frontend",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.0",
+    "redux": "^4.2.0",
+    "react-redux": "^8.0.5",
+    "redux-thunk": "^2.4.2",
+    "axios": "^1.3.4",
+    "socket.io-client": "^4.5.4",
+    "tailwindcss": "^3.2.7",
+    "react-icons": "^4.7.1",
+    "hls.js": "^1.4.0",
+    "react-player": "^2.11.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "eslint src"
+  },
+  "eslintConfig": {
+    "extends": ["react-app"]
+  },
+  "browserslist": {
+    "production": ["last 1 Chrome version"],
+    "development": ["last 1 Chrome version"]
+  },
+  "devDependencies": {
+    "react-scripts": "5.0.1"
+  }
+}
