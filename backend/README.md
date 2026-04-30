@@ -11,7 +11,7 @@ backend/
 ├── src/
 │   ├── config/              # الإعدادات
 │   ├── controllers/         # معالجات الطلبات
-│   ├── models/              # ن��اذج البيانات
+│   ├── models/              # نماذج البيانات
 │   ├── routes/              # المسارات
 │   ├── middleware/          # وسيطات Express
 │   ├── services/            # الخدمات
