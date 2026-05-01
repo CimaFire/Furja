@@ -1,94 +1,44 @@
-# Mobile Setup - فُرجه
+# Mobile README
 
-## المجلد: `/mobile`
+## الملفات المضافة:
 
-هذا هو تطبيق الهاتف الذكي (React Native + Expo)
+### 📱 Screens
+- `HomeScreen.js` - الصفحة الرئيسية مع قائمة البث
+- `StreamScreen.js` - شاشة البث المباشر مع الكاميرا
+- `ProfileScreen.js` - ملف المستخدم الشخصي
+- `NotificationScreen.js` - شاشة الإشعارات
 
-## البنية
+### 📦 Store (Redux)
+- `authSlice.js` - حالة المصادقة
+- `streamsSlice.js` - حالة البث
 
-```
-mobile/
-├── src/
-│   ├── screens/            # شاشات التطبيق
-│   │   ├── HomeScreen.js
-│   │   ├── StreamScreen.js
-│   │   ├── ProfileScreen.js
-│   │   └── DashboardScreen.js
-│   ├── components/         # مكونات React Native
-│   ├── navigation/         # نظام التنقل
-│   ├── services/           # خدمات API
-│   ├── store/              # Redux Store
-│   ├── utils/              # دوال مساعدة
-│   ├── hooks/              # Custom Hooks
-│   └── App.js
-├── assets/                 # الصور والأيقونات
-├── app.json
-├── package.json
-└── README.md
-```
+### 🌐 Services
+- `api.js` - اتصالات API
 
-## المميزات الرئيسية
+### 🎨 Navigation
+- `App.js` - نظام التنقل الرئيسي
 
-### 1. الشاشات الرئيسية
-- **الرئيسية** - قائمة البث
-- **البث** - مشاهدة البث والدردشة
-- **الملف الشخصي** - معلومات المستخدم
-- **لوحة التحكم** - إدارة البث
-
-### 2. البث المباشر
-- الكاميرا الخلفية والأمامية
-- التبديل بين الكاميرات
-- التحكم في الصوت
-- الفلاش والإضاءة
-
-### 3. نظام الدردشة
-- رسائل فورية
-- التفاعلات
-- الهدايا
-
-### 4. الإخطارات
-- إخطارات البث
-- إخطارات الرسائل
-- إخطارات الهدايا
-
-## الإعدادات المطلوبة
-
-```env
-REACT_APP_API_URL=http://localhost:5000
-REACT_APP_WS_URL=ws://localhost:5000
-EXPO_PUBLIC_API_URL=http://localhost:5000
-```
-
-## التشغيل
+## التشغيل:
 
 ```bash
-# تثبيت الحزم
 cd mobile
 npm install
 
-# تشغيل مع Expo
-npm start
-
-# على جهاز iOS
-npm run ios
-
-# على جهاز Android
+# على Android
 npm run android
 
-# على الويب (للاختبار)
+# على iOS
+npm run ios
+
+# على الويب
 npm run web
 ```
 
-## المكتبات المستخدمة
+## المميزات:
 
-- **React Native** - إطار العمل
-- **Expo** - البيئة السريعة
-- **React Navigation** - التنقل
-- **Redux** - إدارة الحالة
-- **Axios** - طلبات HTTP
-- **React Native Camera** - الكاميرا
-- **React Native Permissions** - الأذونات
-
-## المزيد من المعلومات
-
-انظر `./README.md` في مجلد mobile
+✅ واجهة سهلة الاستخدام
+✅ البث المباشر من الكاميرا
+✅ قائمة البث
+✅ ملف شخصي
+✅ إشعارات
+✅ نظام تنقل
