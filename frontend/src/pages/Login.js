@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { authService } from '../../services/api';
-import { setUser, setToken, setError } from '../../store/slices/authSlice';
+import { authService } from '../services/api';
+import { setUser, setToken, setError } from '../store/slices/authSlice';
 
 function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' });

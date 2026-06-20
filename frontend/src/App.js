@@ -11,6 +11,9 @@ import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import GamesPage from './pages/GamesPage';
+import AgenciesPage from './pages/AgenciesPage';
+import CurrencyExchangePage from './pages/CurrencyExchangePage';
 
 // Components
 import Navigation from './components/Common/Navigation';
@@ -30,6 +33,9 @@ function App() {
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/games" element={<GamesPage />} />
+            <Route path="/agencies" element={<AgenciesPage />} />
+            <Route path="/currency" element={<CurrencyExchangePage />} />
           </Routes>
           <Footer />
         </div>

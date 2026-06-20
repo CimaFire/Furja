@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 
 const AgenciesPage = () => {
   const { user } = useSelector(state => state.auth);
+  // eslint-disable-next-line no-unused-vars
   const [agencies, setAgencies] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -16,7 +17,7 @@ const AgenciesPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
+      await axios.post(
         'http://localhost:5000/api/agencies/register',
         formData,
         {

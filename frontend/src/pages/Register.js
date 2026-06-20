@@ -1,16 +1,80 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { authService } from '../services/api';
+import { setUser, setToken, setError } from '../store/slices/authSlice';
 
 function Register() {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setErrorMsg] = useState('');
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMsg('كلمتا المرور غير متطابقتين');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setErrorMsg('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await authService.register(
+        formData.username,
+        formData.email,
+        formData.password
+      );
+      dispatch(setUser(response.data.user));
+      dispatch(setToken(response.data.token));
+      navigate('/');
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || 'خطأ في إنشاء الحساب';
+      setErrorMsg(errorMsg);
+      dispatch(setError(errorMsg));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4">
       <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-lg p-8">
         <h2 className="text-3xl font-bold mb-6 text-center text-pink-500">إنشاء حساب</h2>
         
-        <form className="space-y-4">
+        {error && (
+          <div className="mb-4 p-4 bg-red-600 text-white rounded">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">اسم المستخدم</label>
             <input
               type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              required
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-pink-500"
               placeholder="اسم المستخدم"
             />
@@ -20,6 +84,10 @@ function Register() {
             <label className="block text-sm font-medium mb-2">البريد الإلكتروني</label>
             <input
               type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-pink-500"
               placeholder="your@email.com"
             />
@@ -29,6 +97,10 @@ function Register() {
             <label className="block text-sm font-medium mb-2">كلمة المرور</label>
             <input
               type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-pink-500"
               placeholder="••••••••"
             />
@@ -38,6 +110,10 @@ function Register() {
             <label className="block text-sm font-medium mb-2">تأكيد كلمة المرور</label>
             <input
               type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:border-pink-500"
               placeholder="••••••••"
             />
@@ -45,9 +121,10 @@ function Register() {
 
           <button
             type="submit"
-            className="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 rounded transition"
+            disabled={loading}
+            className="w-full bg-pink-600 hover:bg-pink-700 disabled:bg-gray-600 text-white font-bold py-2 rounded transition"
           >
-            إنشاء حساب
+            {loading ? 'جاري الإنشاء...' : 'إنشاء حساب'}
           </button>
         </form>
 
