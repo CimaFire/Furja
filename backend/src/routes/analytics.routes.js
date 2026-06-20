@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const analyticsController = require('../controllers/analytics.controller');
-const { validateToken } = require('../middleware/auth.middleware');
+const { validateToken, requireAdmin } = require('../middleware/auth.middleware');
 
 // Get stream analytics (protected)
 router.get('/stream/:streamId', validateToken, analyticsController.getStreamAnalytics);
@@ -10,6 +10,6 @@ router.get('/stream/:streamId', validateToken, analyticsController.getStreamAnal
 router.get('/user/:userId', validateToken, analyticsController.getUserAnalytics);
 
 // Get platform statistics (admin only)
-router.get('/admin/stats', validateToken, analyticsController.getPlatformStats);
+router.get('/admin/stats', validateToken, requireAdmin, analyticsController.getPlatformStats);
 
 module.exports = router;

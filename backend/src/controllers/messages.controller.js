@@ -4,8 +4,8 @@ const db = require('../database/db');
 const getStreamMessages = async (req, res) => {
   try {
     const { streamId } = req.params;
-    const limit = req.query.limit || 50;
-    const offset = req.query.offset || 0;
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 100);
+    const offset = Math.max(parseInt(req.query.offset) || 0, 0);
 
     const result = await db.query(
       `SELECT m.*, u.username, u.avatar_url 
@@ -31,6 +31,10 @@ const sendMessage = async (req, res) => {
 
     if (!stream_id || !content) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (typeof content !== 'string' || content.length > 2000) {
+      return res.status(400).json({ error: 'Message too long (max 2000 characters)' });
     }
 
     const result = await db.query(

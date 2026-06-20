@@ -15,8 +15,7 @@ const send2FACode = async (req, res) => {
       [userId, code, expiresAt]
     );
 
-    // Send code via SMS/Email (implement your service)
-    console.log('2FA Code:', code);
+    // TODO: Send code via SMS/Email service
 
     res.json({ message: '2FA code sent successfully' });
   } catch (error) {
@@ -147,8 +146,7 @@ const resetPassword = async (req, res) => {
       [email, resetTokenHash, expiresAt]
     );
 
-    // Send reset email (implement your service)
-    console.log('Reset token:', resetToken);
+    // TODO: Send reset email via email service
 
     res.json({ message: 'Reset password email sent' });
   } catch (error) {

@@ -11,6 +11,10 @@ const createPaymentIntent = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    if (typeof amount !== 'number' || amount <= 0 || amount > 999999) {
+      return res.status(400).json({ error: 'Invalid amount' });
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100),
       currency,
@@ -90,8 +94,8 @@ const handleWebhook = async (req, res) => {
     if (event.type === 'payment_intent.succeeded') {
       const paymentIntent = event.data.object;
       await db.query(
-        'UPDATE payments SET status = "completed" WHERE transaction_id = $1',
-        [paymentIntent.id]
+        'UPDATE payments SET status = $1 WHERE transaction_id = $2',
+        ['completed', paymentIntent.id]
       );
     }
 
