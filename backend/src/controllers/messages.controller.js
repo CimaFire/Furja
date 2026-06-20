@@ -19,6 +19,7 @@ const getStreamMessages = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getStreamMessages error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -42,6 +43,7 @@ const sendMessage = async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
+    console.error('sendMessage error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -70,6 +72,7 @@ const deleteMessage = async (req, res) => {
 
     res.json({ message: 'Message deleted successfully' });
   } catch (error) {
+    console.error('deleteMessage error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

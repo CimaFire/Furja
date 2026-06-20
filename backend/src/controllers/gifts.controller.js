@@ -30,6 +30,7 @@ const sendGift = async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
+    console.error('sendGift error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -51,6 +52,7 @@ const getStreamGifts = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getStreamGifts error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -71,6 +73,7 @@ const getUserGiftHistory = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getUserGiftHistory error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

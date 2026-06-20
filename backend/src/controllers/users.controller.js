@@ -16,6 +16,7 @@ const getUserById = async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('getUserById error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -36,8 +37,13 @@ const updateUser = async (req, res) => {
       [first_name, last_name, bio, avatar_url, id]
     );
 
+    if (!result.rows[0]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('updateUser error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -54,6 +60,7 @@ const getUserStreams = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getUserStreams error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -70,6 +77,7 @@ const getUserFollowers = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getUserFollowers error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -102,6 +110,7 @@ const followUser = async (req, res) => {
 
     res.json({ message: 'Followed successfully' });
   } catch (error) {
+    console.error('followUser error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -119,6 +128,7 @@ const unfollowUser = async (req, res) => {
 
     res.json({ message: 'Unfollowed successfully' });
   } catch (error) {
+    console.error('unfollowUser error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

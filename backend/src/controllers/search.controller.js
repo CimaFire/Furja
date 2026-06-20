@@ -40,6 +40,7 @@ const searchStreams = async (req, res) => {
     const result = await db.query(sqlQuery, params);
     res.json(result.rows);
   } catch (error) {
+    console.error('searchStreams error:', error);
     res.status(500).json({ error: 'Search failed' });
   }
 };
@@ -61,6 +62,7 @@ const searchUsers = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('searchUsers error:', error);
     res.status(500).json({ error: 'Search failed' });
   }
 };
@@ -79,6 +81,7 @@ const getTrendingCategories = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getTrendingCategories error:', error);
     res.status(500).json({ error: 'Failed to get categories' });
   }
 };

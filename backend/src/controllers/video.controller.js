@@ -21,6 +21,7 @@ const processVideo = async (req, res) => {
     const outputPath = path.join(outputDir, `stream-${streamId}`);
 
     // Process video with FFmpeg
+    let responseSent = false;
     ffmpeg(videoFile.data)
       .output(`${outputPath}/playlist.m3u8`)
       .outputOptions([
@@ -31,13 +32,21 @@ const processVideo = async (req, res) => {
         '-hls_list_size 0'
       ])
       .on('error', (err) => {
-        res.status(500).json({ error: 'Video processing failed' });
+        console.error('FFmpeg processing error:', err);
+        if (!responseSent) {
+          responseSent = true;
+          res.status(500).json({ error: 'Video processing failed' });
+        }
       })
       .on('end', () => {
-        res.json({ message: 'Video processed successfully', path: `${outputPath}/playlist.m3u8` });
+        if (!responseSent) {
+          responseSent = true;
+          res.json({ message: 'Video processed successfully', path: `${outputPath}/playlist.m3u8` });
+        }
       })
       .run();
   } catch (error) {
+    console.error('processVideo error:', error);
     res.status(500).json({ error: 'Failed to process video' });
   }
 };
@@ -59,6 +68,7 @@ const generateThumbnail = async (req, res) => {
 
     const outputPath = path.join(outputDir, `thumbnail-${streamId}.png`);
 
+    let responseSent = false;
     ffmpeg(videoFile.data)
       .screenshots({
         timestamps: ['00:00:05'],
@@ -67,12 +77,20 @@ const generateThumbnail = async (req, res) => {
         size: '320x180'
       })
       .on('end', () => {
-        res.json({ message: 'Thumbnail generated', path: outputPath });
+        if (!responseSent) {
+          responseSent = true;
+          res.json({ message: 'Thumbnail generated', path: outputPath });
+        }
       })
       .on('error', (err) => {
-        res.status(500).json({ error: 'Failed to generate thumbnail' });
+        console.error('FFmpeg thumbnail error:', err);
+        if (!responseSent) {
+          responseSent = true;
+          res.status(500).json({ error: 'Failed to generate thumbnail' });
+        }
       });
   } catch (error) {
+    console.error('generateThumbnail error:', error);
     res.status(500).json({ error: 'Failed to generate thumbnail' });
   }
 };

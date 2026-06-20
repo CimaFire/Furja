@@ -18,6 +18,32 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Handle response errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      const { status } = error.response;
+
+      if (status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
+
+      console.error(`API error ${status}:`, error.response.data?.error || error.message);
+    } else if (error.request) {
+      console.error('Network error: No response received from server');
+    } else {
+      console.error('Request error:', error.message);
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export const authService = {
   register: (username, email, password) =>
     api.post('/auth/register', { username, email, password }),

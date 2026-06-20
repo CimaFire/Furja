@@ -21,8 +21,13 @@ const getStreamLiveAnalytics = async (req, res) => {
       [streamId]
     );
 
+    if (!result.rows[0]) {
+      return res.status(404).json({ error: 'Stream not found' });
+    }
+
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('getStreamLiveAnalytics error:', error);
     res.status(500).json({ error: 'Failed to get live analytics' });
   }
 };
@@ -48,8 +53,13 @@ const getUserEngagement = async (req, res) => {
       [userId]
     );
 
+    if (!result.rows[0]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('getUserEngagement error:', error);
     res.status(500).json({ error: 'Failed to get engagement metrics' });
   }
 };
@@ -71,6 +81,7 @@ const getTopStreams = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getTopStreams error:', error);
     res.status(500).json({ error: 'Failed to get top streams' });
   }
 };
@@ -91,6 +102,7 @@ const getTrendingTopics = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getTrendingTopics error:', error);
     res.status(500).json({ error: 'Failed to get trending topics' });
   }
 };

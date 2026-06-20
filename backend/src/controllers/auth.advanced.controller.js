@@ -7,6 +7,10 @@ const db = require('../database/db');
 const send2FACode = async (req, res) => {
   try {
     const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
     const code = crypto.randomInt(100000, 999999);
     const expiresAt = new Date(Date.now() + 10 * 60000); // 10 minutes
 
@@ -20,6 +24,7 @@ const send2FACode = async (req, res) => {
 
     res.json({ message: '2FA code sent successfully' });
   } catch (error) {
+    console.error('send2FACode error:', error);
     res.status(500).json({ error: 'Failed to send 2FA code' });
   }
 };
@@ -28,6 +33,10 @@ const send2FACode = async (req, res) => {
 const verify2FACode = async (req, res) => {
   try {
     const { userId, code } = req.body;
+
+    if (!userId || !code) {
+      return res.status(400).json({ error: 'userId and code are required' });
+    }
 
     const result = await db.query(
       'SELECT * FROM two_factor_auth WHERE user_id = $1 AND code = $2 AND expires_at > NOW()',
@@ -43,6 +52,7 @@ const verify2FACode = async (req, res) => {
 
     res.json({ message: '2FA verified successfully' });
   } catch (error) {
+    console.error('verify2FACode error:', error);
     res.status(500).json({ error: 'Failed to verify 2FA' });
   }
 };
@@ -51,6 +61,10 @@ const verify2FACode = async (req, res) => {
 const loginWithOAuth = async (req, res) => {
   try {
     const { email, name, provider, providerUserId } = req.body;
+
+    if (!email || !provider || !providerUserId) {
+      return res.status(400).json({ error: 'email, provider, and providerUserId are required' });
+    }
 
     // Check if user exists
     let userResult = await db.query(
@@ -92,6 +106,7 @@ const loginWithOAuth = async (req, res) => {
       token
     });
   } catch (error) {
+    console.error('loginWithOAuth error:', error);
     res.status(500).json({ error: 'OAuth login failed' });
   }
 };
@@ -101,6 +116,10 @@ const changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
     const userId = req.user.id;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ error: 'oldPassword and newPassword are required' });
+    }
 
     const userResult = await db.query(
       'SELECT password_hash FROM users WHERE id = $1',
@@ -129,6 +148,7 @@ const changePassword = async (req, res) => {
 
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
+    console.error('changePassword error:', error);
     res.status(500).json({ error: 'Failed to change password' });
   }
 };
@@ -137,6 +157,10 @@ const changePassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'email is required' });
+    }
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
     const expiresAt = new Date(Date.now() + 60 * 60000); // 1 hour
@@ -152,6 +176,7 @@ const resetPassword = async (req, res) => {
 
     res.json({ message: 'Reset password email sent' });
   } catch (error) {
+    console.error('resetPassword error:', error);
     res.status(500).json({ error: 'Failed to reset password' });
   }
 };
