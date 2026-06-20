@@ -32,7 +32,7 @@ const updateUser = async (req, res) => {
     }
 
     const result = await db.query(
-      'UPDATE users SET first_name = $1, last_name = $2, bio = $3, avatar_url = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING *',
+      'UPDATE users SET first_name = $1, last_name = $2, bio = $3, avatar_url = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING id, username, email, first_name, last_name, bio, avatar_url',
       [first_name, last_name, bio, avatar_url, id]
     );
 
@@ -64,7 +64,7 @@ const getUserFollowers = async (req, res) => {
     const { id } = req.params;
 
     const result = await db.query(
-      'SELECT u.* FROM users u JOIN follows f ON u.id = f.follower_id WHERE f.following_id = $1',
+      'SELECT u.id, u.username, u.avatar_url, u.first_name, u.last_name FROM users u JOIN follows f ON u.id = f.follower_id WHERE f.following_id = $1',
       [id]
     );
 

@@ -18,7 +18,7 @@ router.put('/:id', validateToken, streamsController.updateStream);
 // End stream (protected)
 router.post('/:id/end', validateToken, streamsController.endStream);
 
-// Get stream analytics
-router.get('/:id/analytics', streamsController.getStreamAnalytics);
+// Get stream analytics (protected)
+router.get('/:id/analytics', validateToken, streamsController.getStreamAnalytics);
 
 module.exports = router;

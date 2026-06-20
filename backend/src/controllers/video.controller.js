@@ -7,6 +7,10 @@ const db = require('../database/db');
 const processVideo = async (req, res) => {
   try {
     const { streamId } = req.body;
+
+    if (!streamId || !/^\d+$/.test(String(streamId))) {
+      return res.status(400).json({ error: 'Invalid stream ID' });
+    }
     const videoFile = req.files?.video;
 
     if (!videoFile) {
@@ -46,6 +50,11 @@ const processVideo = async (req, res) => {
 const generateThumbnail = async (req, res) => {
   try {
     const { streamId } = req.body;
+
+    if (!streamId || !/^\d+$/.test(String(streamId))) {
+      return res.status(400).json({ error: 'Invalid stream ID' });
+    }
+
     const videoFile = req.files?.video;
 
     if (!videoFile) {

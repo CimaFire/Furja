@@ -9,7 +9,7 @@ router.get('/stream/:streamId', giftsController.getStreamGifts);
 // Send gift (protected)
 router.post('/', validateToken, giftsController.sendGift);
 
-// Get user gift history
-router.get('/user/:userId/history', giftsController.getUserGiftHistory);
+// Get user gift history (protected)
+router.get('/user/:userId/history', validateToken, giftsController.getUserGiftHistory);
 
 module.exports = router;

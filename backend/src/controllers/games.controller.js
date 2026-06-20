@@ -87,7 +87,7 @@ const startGame = async (req, res) => {
 // End game
 const endGame = async (req, res) => {
   try {
-    const { sessionId, result: gameResult, winAmount } = req.body;
+    const { sessionId, result: gameResult } = req.body;
     const userId = req.user.id;
 
     // Get session
@@ -102,11 +102,22 @@ const endGame = async (req, res) => {
 
     const session = sessionResult.rows[0];
 
+    if (session.status !== 'playing') {
+      return res.status(400).json({ error: 'Game session already ended' });
+    }
+
+    // Compute winAmount server-side based on game rules
+    const gameInfo = await db.query('SELECT * FROM games WHERE id = $1', [session.game_id]);
+    const multiplier = gameInfo.rows.length > 0 && gameInfo.rows[0].win_multiplier
+      ? gameInfo.rows[0].win_multiplier
+      : 2;
+    const winAmount = gameResult === 'win' ? session.bet_amount * multiplier : 0;
+
     // Update session
     await db.query(
       `UPDATE game_sessions SET status = $1, result = $2, win_amount = $3, ended_at = NOW()
        WHERE id = $4`,
-      [gameResult === 'win' ? 'won' : 'lost', gameResult, winAmount || 0, sessionId]
+      [gameResult === 'win' ? 'won' : 'lost', gameResult, winAmount, sessionId]
     );
 
     // Add winnings to wallet if won
@@ -120,7 +131,7 @@ const endGame = async (req, res) => {
     res.json({
       message: 'Game ended',
       result: gameResult,
-      winAmount: winAmount || 0
+      winAmount
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to end game' });
