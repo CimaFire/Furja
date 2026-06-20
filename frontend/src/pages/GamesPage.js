@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useSelector } from 'react-redux';
+import { gamesService } from '../services/api';
 
 const GamesPage = () => {
   const { user } = useSelector(state => state.auth);
@@ -18,7 +18,7 @@ const GamesPage = () => {
 
   const fetchGames = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/games');
+      const response = await gamesService.getGames();
       setGames(response.data);
     } catch (error) {
       console.error('Failed to fetch games');
@@ -27,7 +27,7 @@ const GamesPage = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/games/leaderboard');
+      const response = await gamesService.getLeaderboard();
       setLeaderboard(response.data);
     } catch (error) {
       console.error('Failed to fetch leaderboard');
@@ -36,9 +36,7 @@ const GamesPage = () => {
 
   const fetchUserStats = async () => {
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/games/user/${user.id}/stats`
-      );
+      const response = await gamesService.getUserGameStats(user.id);
       setUserStats(response.data);
     } catch (error) {
       console.error('Failed to fetch user stats');
@@ -52,21 +50,10 @@ const GamesPage = () => {
     }
 
     try {
-      // Simulate game result
       const isWin = Math.random() > 0.5;
       const winAmount = isWin ? betAmount * game.win_multiplier : 0;
 
-      await axios.post(
-        'http://localhost:5000/api/games/end',
-        {
-          sessionId: Math.random(),
-          result: isWin ? 'win' : 'lost',
-          winAmount: winAmount
-        },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }
-      );
+      await gamesService.endGame(Math.random(), isWin ? 'win' : 'lost', winAmount);
 
       alert(isWin ? `فزت! 🎉 ${winAmount}` : 'خسرت! حاول مرة أخرى');
       fetchUserStats();

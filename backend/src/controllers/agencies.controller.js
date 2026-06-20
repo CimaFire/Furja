@@ -1,205 +1,137 @@
 const db = require('../database/db');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('../utils/stripe');
+const asyncHandler = require('../utils/asyncHandler');
+const { findOneOrFail, findMany, checkAgencyAdmin } = require('../utils/db.helpers');
+const { ValidationError } = require('../utils/errors');
 
 // Register agency
-const registerAgency = async (req, res) => {
-  try {
-    const { agencyName, agencyType, businessRegistration, contactEmail } = req.body;
-    const userId = req.user.id;
+const registerAgency = asyncHandler(async (req, res) => {
+  const { agencyName, agencyType, businessRegistration, contactEmail } = req.body;
+  const userId = req.user.id;
 
-    // Check if user already has agency
-    const existingAgency = await db.query(
-      'SELECT * FROM agencies WHERE admin_id = $1',
-      [userId]
-    );
+  const existingAgency = await db.query(
+    'SELECT * FROM agencies WHERE admin_id = $1',
+    [userId]
+  );
 
-    if (existingAgency.rows.length > 0) {
-      return res.status(400).json({ error: 'User already has an agency' });
-    }
-
-    // Create agency
-    const result = await db.query(
-      `INSERT INTO agencies (admin_id, name, type, business_registration, contact_email, status, commission_rate) 
-       VALUES ($1, $2, $3, $4, $5, 'pending', 0.15) 
-       RETURNING *`,
-      [userId, agencyName, agencyType, businessRegistration, contactEmail]
-    );
-
-    res.status(201).json({
-      message: 'Agency registered successfully',
-      agency: result.rows[0]
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to register agency' });
+  if (existingAgency.rows.length > 0) {
+    throw new ValidationError('User already has an agency');
   }
-};
+
+  const result = await db.query(
+    `INSERT INTO agencies (admin_id, name, type, business_registration, contact_email, status, commission_rate) 
+     VALUES ($1, $2, $3, $4, $5, 'pending', 0.15) 
+     RETURNING *`,
+    [userId, agencyName, agencyType, businessRegistration, contactEmail]
+  );
+
+  res.status(201).json({
+    message: 'Agency registered successfully',
+    agency: result.rows[0]
+  });
+});
 
 // Get agency
-const getAgency = async (req, res) => {
-  try {
-    const { agencyId } = req.params;
+const getAgency = asyncHandler(async (req, res) => {
+  const agency = await findOneOrFail(
+    'SELECT * FROM agencies WHERE id = $1',
+    [req.params.agencyId],
+    'Agency'
+  );
 
-    const result = await db.query(
-      'SELECT * FROM agencies WHERE id = $1',
-      [agencyId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Agency not found' });
-    }
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to get agency' });
-  }
-};
+  res.json(agency);
+});
 
 // Add broadcaster to agency
-const addBroadcaster = async (req, res) => {
-  try {
-    const { agencyId, broadcasterId, contractType } = req.body;
-    const userId = req.user.id;
+const addBroadcaster = asyncHandler(async (req, res) => {
+  const { agencyId, broadcasterId, contractType } = req.body;
 
-    // Check if user is agency admin
-    const agencyResult = await db.query(
-      'SELECT * FROM agencies WHERE id = $1 AND admin_id = $2',
-      [agencyId, userId]
-    );
+  await checkAgencyAdmin(agencyId, req.user.id);
 
-    if (agencyResult.rows.length === 0) {
-      return res.status(403).json({ error: 'Not authorized to add broadcasters' });
-    }
+  const result = await db.query(
+    `INSERT INTO agency_broadcasters (agency_id, broadcaster_id, contract_type, status, joined_at) 
+     VALUES ($1, $2, $3, 'active', NOW()) 
+     RETURNING *`,
+    [agencyId, broadcasterId, contractType]
+  );
 
-    // Add broadcaster
-    const result = await db.query(
-      `INSERT INTO agency_broadcasters (agency_id, broadcaster_id, contract_type, status, joined_at) 
-       VALUES ($1, $2, $3, 'active', NOW()) 
-       RETURNING *`,
-      [agencyId, broadcasterId, contractType]
-    );
-
-    res.status(201).json({
-      message: 'Broadcaster added to agency',
-      broadcasterAgency: result.rows[0]
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to add broadcaster' });
-  }
-};
+  res.status(201).json({
+    message: 'Broadcaster added to agency',
+    broadcasterAgency: result.rows[0]
+  });
+});
 
 // Get agency broadcasters
-const getAgencyBroadcasters = async (req, res) => {
-  try {
-    const { agencyId } = req.params;
+const getAgencyBroadcasters = asyncHandler(async (req, res) => {
+  const broadcasters = await findMany(
+    `SELECT ab.*, u.username, u.avatar_url, s.title as last_stream
+     FROM agency_broadcasters ab
+     JOIN users u ON ab.broadcaster_id = u.id
+     LEFT JOIN streams s ON u.id = s.user_id
+     WHERE ab.agency_id = $1 AND ab.status = 'active'
+     ORDER BY ab.joined_at DESC`,
+    [req.params.agencyId]
+  );
 
-    const result = await db.query(
-      `SELECT ab.*, u.username, u.avatar_url, s.title as last_stream
-       FROM agency_broadcasters ab
-       JOIN users u ON ab.broadcaster_id = u.id
-       LEFT JOIN streams s ON u.id = s.user_id
-       WHERE ab.agency_id = $1 AND ab.status = 'active'
-       ORDER BY ab.joined_at DESC`,
-      [agencyId]
-    );
-
-    res.json(result.rows);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to get broadcasters' });
-  }
-};
+  res.json(broadcasters);
+});
 
 // Get agency earnings
-const getAgencyEarnings = async (req, res) => {
-  try {
-    const { agencyId } = req.params;
-    const userId = req.user.id;
+const getAgencyEarnings = asyncHandler(async (req, res) => {
+  const { agencyId } = req.params;
 
-    // Check if user is agency admin
-    const agencyResult = await db.query(
-      'SELECT * FROM agencies WHERE id = $1 AND admin_id = $2',
-      [agencyId, userId]
-    );
+  await checkAgencyAdmin(agencyId, req.user.id);
 
-    if (agencyResult.rows.length === 0) {
-      return res.status(403).json({ error: 'Not authorized' });
-    }
+  const earnings = await findMany(
+    `SELECT 
+      DATE(p.created_at) as date,
+      COUNT(*) as transactions,
+      SUM(p.amount) as total_amount,
+      SUM(p.amount * ae.commission_rate) as agency_earnings
+     FROM payments p
+     JOIN agency_earnings ae ON p.user_id = ae.user_id
+     WHERE ae.agency_id = $1
+     GROUP BY DATE(p.created_at)
+     ORDER BY date DESC`,
+    [agencyId]
+  );
 
-    const earnings = await db.query(
-      `SELECT 
-        DATE(p.created_at) as date,
-        COUNT(*) as transactions,
-        SUM(p.amount) as total_amount,
-        SUM(p.amount * ae.commission_rate) as agency_earnings
-       FROM payments p
-       JOIN agency_earnings ae ON p.user_id = ae.user_id
-       WHERE ae.agency_id = $1
-       GROUP BY DATE(p.created_at)
-       ORDER BY date DESC`,
-      [agencyId]
-    );
-
-    res.json(earnings.rows);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to get earnings' });
-  }
-};
+  res.json(earnings);
+});
 
 // Withdraw agency earnings
-const withdrawEarnings = async (req, res) => {
-  try {
-    const { agencyId, amount } = req.body;
-    const userId = req.user.id;
+const withdrawEarnings = asyncHandler(async (req, res) => {
+  const { agencyId, amount } = req.body;
 
-    // Check if user is agency admin
-    const agencyResult = await db.query(
-      'SELECT * FROM agencies WHERE id = $1 AND admin_id = $2',
-      [agencyId, userId]
-    );
+  await checkAgencyAdmin(agencyId, req.user.id);
 
-    if (agencyResult.rows.length === 0) {
-      return res.status(403).json({ error: 'Not authorized' });
-    }
+  const earningsResult = await db.query(
+    `SELECT COALESCE(SUM(commission_amount), 0) as total
+     FROM agency_earnings
+     WHERE agency_id = $1 AND withdrawn = false`,
+    [agencyId]
+  );
 
-    // Get total earnings
-    const earningsResult = await db.query(
-      `SELECT COALESCE(SUM(commission_amount), 0) as total
-       FROM agency_earnings
-       WHERE agency_id = $1 AND withdrawn = false`,
-      [agencyId]
-    );
+  const totalEarnings = earningsResult.rows[0].total;
 
-    const totalEarnings = earningsResult.rows[0].total;
-
-    if (amount > totalEarnings) {
-      return res.status(400).json({ error: 'Insufficient earnings' });
-    }
-
-    // Create payout
-    const payout = await stripe.payouts.create({
-      amount: Math.floor(amount * 100),
-      currency: 'usd'
-    });
-
-    // Mark as withdrawn
-    await db.query(
-      `UPDATE agency_earnings SET withdrawn = true WHERE agency_id = $1 AND withdrawn = false LIMIT $2`,
-      [agencyId, Math.floor(amount)]
-    );
-
-    res.json({
-      message: 'Withdrawal successful',
-      payout: payout
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to withdraw earnings' });
+  if (amount > totalEarnings) {
+    throw new ValidationError('Insufficient earnings');
   }
-};
 
-module.exports = {
-  registerAgency,
-  getAgency,
-  addBroadcaster,
-  getAgencyBroadcasters,
-  getAgencyEarnings,
-  withdrawEarnings
-};
+  const payout = await stripe.payouts.create({
+    amount: Math.floor(amount * 100),
+    currency: 'usd'
+  });
+
+  await db.query(
+    `UPDATE agency_earnings SET withdrawn = true WHERE agency_id = $1 AND withdrawn = false LIMIT $2`,
+    [agencyId, Math.floor(amount)]
+  );
+
+  res.json({
+    message: 'Withdrawal successful',
+    payout: payout
+  });
+});
+
+module.exports = { registerAgency, getAgency, addBroadcaster, getAgencyBroadcasters, getAgencyEarnings, withdrawEarnings };
