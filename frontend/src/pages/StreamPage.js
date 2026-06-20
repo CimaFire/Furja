@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { streamsService } from '../../services/api';
-import VideoPlayer from '../Stream/VideoPlayer';
-import ChatBox from '../Chat/ChatBox';
+import { streamsService } from '../services/api';
+import VideoPlayer from '../components/Stream/VideoPlayer';
+import ChatBox from '../components/Chat/ChatBox';
 
 function StreamPage() {
   const { id } = useParams();

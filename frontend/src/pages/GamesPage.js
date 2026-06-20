@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { gamesService } from '../../services/api';
+import { gamesService } from '../services/api';
 
 const GamesPage = () => {
   const { user } = useSelector(state => state.auth);

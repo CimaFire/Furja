@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { agenciesService } from '../../services/api';
+import { agenciesService } from '../services/api';
 
 const AgenciesPage = () => {
   const { user } = useSelector(state => state.auth);
