@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { agenciesService } from '../../services/api';
 
 const AgenciesPage = () => {
   const { user } = useSelector(state => state.auth);
-  const [agencies, setAgencies] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     agencyName: '',
@@ -16,13 +15,7 @@ const AgenciesPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        'http://localhost:5000/api/agencies/register',
-        formData,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }
-      );
+      await agenciesService.register(formData);
       alert('وكالة مسجلة بنجاح!');
       setShowForm(false);
       setFormData({ agencyName: '', agencyType: 'talent', businessRegistration: '', contactEmail: '' });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { currencyService } from '../../services/api';
 
 const CurrencyExchange = () => {
   const [rates, setRates] = useState([]);
@@ -14,7 +14,7 @@ const CurrencyExchange = () => {
 
   const fetchRates = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/currency/rates');
+      const response = await currencyService.getRates();
       setRates(response.data);
     } catch (error) {
       console.error('Failed to fetch rates');
@@ -23,14 +23,7 @@ const CurrencyExchange = () => {
 
   const handleConvert = async () => {
     try {
-      const response = await axios.post(
-        'http://localhost:5000/api/currency/convert',
-        {
-          fromCurrency,
-          toCurrency,
-          amount: parseFloat(amount)
-        }
-      );
+      const response = await currencyService.convert(fromCurrency, toCurrency, amount);
       setResult(response.data);
     } catch (error) {
       alert('فشل التحويل');

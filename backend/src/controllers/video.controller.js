@@ -1,83 +1,72 @@
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const path = require('path');
-const db = require('../database/db');
+const asyncHandler = require('../utils/asyncHandler');
+const { ValidationError } = require('../utils/errors');
 
 // Process video upload
-const processVideo = async (req, res) => {
-  try {
-    const { streamId } = req.body;
-    const videoFile = req.files?.video;
+const processVideo = asyncHandler(async (req, res) => {
+  const { streamId } = req.body;
+  const videoFile = req.files?.video;
 
-    if (!videoFile) {
-      return res.status(400).json({ error: 'No video file provided' });
-    }
-
-    const outputDir = path.join(__dirname, '../../hls');
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    const outputPath = path.join(outputDir, `stream-${streamId}`);
-
-    // Process video with FFmpeg
-    ffmpeg(videoFile.data)
-      .output(`${outputPath}/playlist.m3u8`)
-      .outputOptions([
-        '-c:v libx264',
-        '-crf 21',
-        '-c:a aac',
-        '-hls_time 10',
-        '-hls_list_size 0'
-      ])
-      .on('error', (err) => {
-        res.status(500).json({ error: 'Video processing failed' });
-      })
-      .on('end', () => {
-        res.json({ message: 'Video processed successfully', path: `${outputPath}/playlist.m3u8` });
-      })
-      .run();
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to process video' });
+  if (!videoFile) {
+    throw new ValidationError('No video file provided');
   }
-};
+
+  const outputDir = path.join(__dirname, '../../hls');
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  const outputPath = path.join(outputDir, `stream-${streamId}`);
+
+  ffmpeg(videoFile.data)
+    .output(`${outputPath}/playlist.m3u8`)
+    .outputOptions([
+      '-c:v libx264',
+      '-crf 21',
+      '-c:a aac',
+      '-hls_time 10',
+      '-hls_list_size 0'
+    ])
+    .on('error', (err) => {
+      res.status(500).json({ error: 'Video processing failed' });
+    })
+    .on('end', () => {
+      res.json({ message: 'Video processed successfully', path: `${outputPath}/playlist.m3u8` });
+    })
+    .run();
+});
 
 // Generate thumbnails
-const generateThumbnail = async (req, res) => {
-  try {
-    const { streamId } = req.body;
-    const videoFile = req.files?.video;
+const generateThumbnail = asyncHandler(async (req, res) => {
+  const { streamId } = req.body;
+  const videoFile = req.files?.video;
 
-    if (!videoFile) {
-      return res.status(400).json({ error: 'No video file provided' });
-    }
-
-    const outputDir = path.join(__dirname, '../../thumbnails');
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-
-    const outputPath = path.join(outputDir, `thumbnail-${streamId}.png`);
-
-    ffmpeg(videoFile.data)
-      .screenshots({
-        timestamps: ['00:00:05'],
-        filename: `thumbnail-${streamId}.png`,
-        folder: outputDir,
-        size: '320x180'
-      })
-      .on('end', () => {
-        res.json({ message: 'Thumbnail generated', path: outputPath });
-      })
-      .on('error', (err) => {
-        res.status(500).json({ error: 'Failed to generate thumbnail' });
-      });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to generate thumbnail' });
+  if (!videoFile) {
+    throw new ValidationError('No video file provided');
   }
-};
 
-module.exports = {
-  processVideo,
-  generateThumbnail
-};
+  const outputDir = path.join(__dirname, '../../thumbnails');
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  const outputPath = path.join(outputDir, `thumbnail-${streamId}.png`);
+
+  ffmpeg(videoFile.data)
+    .screenshots({
+      timestamps: ['00:00:05'],
+      filename: `thumbnail-${streamId}.png`,
+      folder: outputDir,
+      size: '320x180'
+    })
+    .on('end', () => {
+      res.json({ message: 'Thumbnail generated', path: outputPath });
+    })
+    .on('error', (err) => {
+      res.status(500).json({ error: 'Failed to generate thumbnail' });
+    });
+});
+
+module.exports = { processVideo, generateThumbnail };

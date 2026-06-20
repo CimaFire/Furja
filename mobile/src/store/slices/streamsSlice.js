@@ -1,28 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createStreamsSlice } from '../../../../shared/store/slices/streamsSlice';
 
-const streamsSlice = createSlice({
-  name: 'streams',
-  initialState: {
-    streams: [],
-    currentStream: null,
-    isLoading: false,
-    error: null
-  },
-  reducers: {
-    setStreams: (state, action) => {
-      state.streams = action.payload;
-    },
-    setCurrentStream: (state, action) => {
-      state.currentStream = action.payload;
-    },
-    setLoading: (state, action) => {
-      state.isLoading = action.payload;
-    },
-    setError: (state, action) => {
-      state.error = action.payload;
-    }
-  }
-});
+const streamsSlice = createStreamsSlice();
 
 export const { setStreams, setCurrentStream, setLoading, setError } = streamsSlice.actions;
 export default streamsSlice.reducer;
