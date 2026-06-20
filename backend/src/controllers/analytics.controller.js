@@ -27,6 +27,7 @@ const getStreamAnalytics = async (req, res) => {
 
     res.json(result.rows[0] || { message: 'No analytics available' });
   } catch (error) {
+    console.error('getStreamAnalytics error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -55,6 +56,7 @@ const getUserAnalytics = async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('getUserAnalytics error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -75,6 +77,7 @@ const getPlatformStats = async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('getPlatformStats error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

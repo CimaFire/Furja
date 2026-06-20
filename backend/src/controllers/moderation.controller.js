@@ -6,6 +6,10 @@ const reportContent = async (req, res) => {
     const { contentType, contentId, reason, description } = req.body;
     const userId = req.user.id;
 
+    if (!contentType || !contentId || !reason) {
+      return res.status(400).json({ error: 'contentType, contentId, and reason are required' });
+    }
+
     const result = await db.query(
       `INSERT INTO reports (user_id, content_type, content_id, reason, description, status) 
        VALUES ($1, $2, $3, $4, $5, 'pending') 
@@ -15,6 +19,7 @@ const reportContent = async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
+    console.error('reportContent error:', error);
     res.status(500).json({ error: 'Failed to report content' });
   }
 };
@@ -32,6 +37,7 @@ const getReports = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getReports error:', error);
     res.status(500).json({ error: 'Failed to fetch reports' });
   }
 };
@@ -40,6 +46,14 @@ const getReports = async (req, res) => {
 const handleReport = async (req, res) => {
   try {
     const { reportId, action, notes } = req.body;
+
+    if (!reportId || !action) {
+      return res.status(400).json({ error: 'reportId and action are required' });
+    }
+
+    if (!['approved', 'rejected'].includes(action)) {
+      return res.status(400).json({ error: 'action must be approved or rejected' });
+    }
 
     // Update report status
     await db.query(
@@ -53,6 +67,10 @@ const handleReport = async (req, res) => {
         'SELECT * FROM reports WHERE id = $1',
         [reportId]
       );
+
+      if (reportResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Report not found' });
+      }
 
       const report = reportResult.rows[0];
 
@@ -71,6 +89,7 @@ const handleReport = async (req, res) => {
 
     res.json({ message: 'Report handled successfully' });
   } catch (error) {
+    console.error('handleReport error:', error);
     res.status(500).json({ error: 'Failed to handle report' });
   }
 };
@@ -79,6 +98,11 @@ const handleReport = async (req, res) => {
 const banUser = async (req, res) => {
   try {
     const { userId, reason, duration } = req.body;
+
+    if (!userId || !reason || !duration) {
+      return res.status(400).json({ error: 'userId, reason, and duration are required' });
+    }
+
     const banUntil = new Date(Date.now() + duration * 24 * 60 * 60000);
 
     await db.query(
@@ -93,6 +117,7 @@ const banUser = async (req, res) => {
 
     res.json({ message: 'User banned successfully' });
   } catch (error) {
+    console.error('banUser error:', error);
     res.status(500).json({ error: 'Failed to ban user' });
   }
 };

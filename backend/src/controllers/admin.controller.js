@@ -15,6 +15,7 @@ const getPlatformStats = async (req, res) => {
 
     res.json(stats.rows[0]);
   } catch (error) {
+    console.error('getPlatformStats error:', error);
     res.status(500).json({ error: 'Failed to get platform stats' });
   }
 };
@@ -40,8 +41,13 @@ const getUserStats = async (req, res) => {
       [userId]
     );
 
+    if (!stats.rows[0]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     res.json(stats.rows[0]);
   } catch (error) {
+    console.error('getUserStats error:', error);
     res.status(500).json({ error: 'Failed to get user stats' });
   }
 };
@@ -50,6 +56,10 @@ const getUserStats = async (req, res) => {
 const getRevenueReport = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'startDate and endDate query parameters are required' });
+    }
 
     const report = await db.query(
       `SELECT 
@@ -67,6 +77,7 @@ const getRevenueReport = async (req, res) => {
 
     res.json(report.rows);
   } catch (error) {
+    console.error('getRevenueReport error:', error);
     res.status(500).json({ error: 'Failed to get revenue report' });
   }
 };

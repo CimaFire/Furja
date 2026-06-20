@@ -7,6 +7,10 @@ const registerAgency = async (req, res) => {
     const { agencyName, agencyType, businessRegistration, contactEmail } = req.body;
     const userId = req.user.id;
 
+    if (!agencyName || !agencyType || !contactEmail) {
+      return res.status(400).json({ error: 'agencyName, agencyType, and contactEmail are required' });
+    }
+
     // Check if user already has agency
     const existingAgency = await db.query(
       'SELECT * FROM agencies WHERE admin_id = $1',
@@ -30,6 +34,7 @@ const registerAgency = async (req, res) => {
       agency: result.rows[0]
     });
   } catch (error) {
+    console.error('registerAgency error:', error);
     res.status(500).json({ error: 'Failed to register agency' });
   }
 };
@@ -50,6 +55,7 @@ const getAgency = async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('getAgency error:', error);
     res.status(500).json({ error: 'Failed to get agency' });
   }
 };
@@ -59,6 +65,10 @@ const addBroadcaster = async (req, res) => {
   try {
     const { agencyId, broadcasterId, contractType } = req.body;
     const userId = req.user.id;
+
+    if (!agencyId || !broadcasterId) {
+      return res.status(400).json({ error: 'agencyId and broadcasterId are required' });
+    }
 
     // Check if user is agency admin
     const agencyResult = await db.query(
@@ -83,6 +93,7 @@ const addBroadcaster = async (req, res) => {
       broadcasterAgency: result.rows[0]
     });
   } catch (error) {
+    console.error('addBroadcaster error:', error);
     res.status(500).json({ error: 'Failed to add broadcaster' });
   }
 };
@@ -104,6 +115,7 @@ const getAgencyBroadcasters = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getAgencyBroadcasters error:', error);
     res.status(500).json({ error: 'Failed to get broadcasters' });
   }
 };
@@ -140,6 +152,7 @@ const getAgencyEarnings = async (req, res) => {
 
     res.json(earnings.rows);
   } catch (error) {
+    console.error('getAgencyEarnings error:', error);
     res.status(500).json({ error: 'Failed to get earnings' });
   }
 };
@@ -149,6 +162,14 @@ const withdrawEarnings = async (req, res) => {
   try {
     const { agencyId, amount } = req.body;
     const userId = req.user.id;
+
+    if (!agencyId || !amount) {
+      return res.status(400).json({ error: 'agencyId and amount are required' });
+    }
+
+    if (typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ error: 'Amount must be a positive number' });
+    }
 
     // Check if user is agency admin
     const agencyResult = await db.query(
@@ -191,6 +212,7 @@ const withdrawEarnings = async (req, res) => {
       payout: payout
     });
   } catch (error) {
+    console.error('withdrawEarnings error:', error);
     res.status(500).json({ error: 'Failed to withdraw earnings' });
   }
 };

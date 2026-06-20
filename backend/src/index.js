@@ -42,10 +42,41 @@ app.get('/health', (req, res) => {
   res.json({ status: 'Server is running ✅' });
 });
 
+// 404 handler for unmatched routes
+app.use((req, res) => {
+  res.status(404).json({ error: `Route ${req.method} ${req.originalUrl} not found` });
+});
+
+// Global error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Invalid JSON in request body' });
+  }
+
+  const statusCode = err.statusCode || err.status || 500;
+  res.status(statusCode).json({
+    error: process.env.NODE_ENV === 'production'
+      ? 'Internal server error'
+      : err.message || 'Internal server error'
+  });
+});
+
 // WebSocket Events
 require('./websocket/stream.socket')(io);
 require('./websocket/chat.socket')(io);
 require('./websocket/notification.socket')(io);
+
+// Process-level error handlers
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Promise Rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
 
 const PORT = process.env.PORT || 5000;
 

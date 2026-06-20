@@ -9,6 +9,7 @@ const getGames = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getGames error:', error);
     res.status(500).json({ error: 'Failed to get games' });
   }
 };
@@ -29,81 +30,114 @@ const getGameDetails = async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('getGameDetails error:', error);
     res.status(500).json({ error: 'Failed to get game details' });
   }
 };
 
 // Start game
 const startGame = async (req, res) => {
+  const client = await db.connect();
+
   try {
     const { gameId, streamId, betAmount } = req.body;
     const userId = req.user.id;
 
+    if (!gameId || betAmount == null) {
+      return res.status(400).json({ error: 'gameId and betAmount are required' });
+    }
+
+    if (typeof betAmount !== 'number' || betAmount <= 0) {
+      return res.status(400).json({ error: 'betAmount must be a positive number' });
+    }
+
+    await client.query('BEGIN');
+
     // Get game
-    const gameResult = await db.query(
+    const gameResult = await client.query(
       'SELECT * FROM games WHERE id = $1',
       [gameId]
     );
 
     if (gameResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Game not found' });
     }
 
-    const game = gameResult.rows[0];
-
-    // Check balance
-    const walletResult = await db.query(
-      'SELECT * FROM user_wallets WHERE user_id = $1 AND currency = $2',
+    // Check balance with row lock
+    const walletResult = await client.query(
+      'SELECT * FROM user_wallets WHERE user_id = $1 AND currency = $2 FOR UPDATE',
       [userId, 'USD']
     );
 
     if (walletResult.rows.length === 0 || walletResult.rows[0].balance < betAmount) {
+      await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Insufficient balance' });
     }
 
     // Deduct bet
-    await db.query(
-      'UPDATE user_wallets SET balance = balance - $1 WHERE user_id = $2',
-      [betAmount, userId]
+    await client.query(
+      'UPDATE user_wallets SET balance = balance - $1 WHERE user_id = $2 AND currency = $3',
+      [betAmount, userId, 'USD']
     );
 
     // Create game session
-    const sessionResult = await db.query(
+    const sessionResult = await client.query(
       `INSERT INTO game_sessions (game_id, user_id, stream_id, bet_amount, status, started_at)
        VALUES ($1, $2, $3, $4, 'playing', NOW())
        RETURNING *`,
       [gameId, userId, streamId, betAmount]
     );
 
+    await client.query('COMMIT');
+
     res.status(201).json({
       message: 'Game started',
       session: sessionResult.rows[0]
     });
   } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('startGame error:', error);
     res.status(500).json({ error: 'Failed to start game' });
+  } finally {
+    client.release();
   }
 };
 
 // End game
 const endGame = async (req, res) => {
+  const client = await db.connect();
+
   try {
     const { sessionId, result: gameResult, winAmount } = req.body;
     const userId = req.user.id;
 
+    if (!sessionId || !gameResult) {
+      return res.status(400).json({ error: 'sessionId and result are required' });
+    }
+
+    await client.query('BEGIN');
+
     // Get session
-    const sessionResult = await db.query(
-      'SELECT * FROM game_sessions WHERE id = $1 AND user_id = $2',
+    const sessionResult = await client.query(
+      'SELECT * FROM game_sessions WHERE id = $1 AND user_id = $2 FOR UPDATE',
       [sessionId, userId]
     );
 
     if (sessionResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Game session not found' });
     }
 
     const session = sessionResult.rows[0];
 
+    if (session.status !== 'playing') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Game session is not active' });
+    }
+
     // Update session
-    await db.query(
+    await client.query(
       `UPDATE game_sessions SET status = $1, result = $2, win_amount = $3, ended_at = NOW()
        WHERE id = $4`,
       [gameResult === 'win' ? 'won' : 'lost', gameResult, winAmount || 0, sessionId]
@@ -111,11 +145,13 @@ const endGame = async (req, res) => {
 
     // Add winnings to wallet if won
     if (gameResult === 'win' && winAmount > 0) {
-      await db.query(
-        'UPDATE user_wallets SET balance = balance + $1 WHERE user_id = $2',
-        [winAmount, userId]
+      await client.query(
+        'UPDATE user_wallets SET balance = balance + $1 WHERE user_id = $2 AND currency = $3',
+        [winAmount, userId, 'USD']
       );
     }
+
+    await client.query('COMMIT');
 
     res.json({
       message: 'Game ended',
@@ -123,7 +159,11 @@ const endGame = async (req, res) => {
       winAmount: winAmount || 0
     });
   } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('endGame error:', error);
     res.status(500).json({ error: 'Failed to end game' });
+  } finally {
+    client.release();
   }
 };
 
@@ -146,6 +186,7 @@ const getUserGameStats = async (req, res) => {
 
     res.json(stats.rows[0]);
   } catch (error) {
+    console.error('getUserGameStats error:', error);
     res.status(500).json({ error: 'Failed to get game stats' });
   }
 };
@@ -175,6 +216,7 @@ const getLeaderboard = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getLeaderboard error:', error);
     res.status(500).json({ error: 'Failed to get leaderboard' });
   }
 };

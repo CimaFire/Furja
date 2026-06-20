@@ -7,6 +7,10 @@ const createSubscription = async (req, res) => {
     const { planId, paymentMethodId } = req.body;
     const userId = req.user.id;
 
+    if (!planId || !paymentMethodId) {
+      return res.status(400).json({ error: 'planId and paymentMethodId are required' });
+    }
+
     // Get or create Stripe customer
     let customer;
     const userResult = await db.query(
@@ -44,6 +48,7 @@ const createSubscription = async (req, res) => {
 
     res.json({ subscription });
   } catch (error) {
+    console.error('createSubscription error:', error);
     res.status(500).json({ error: 'Failed to create subscription' });
   }
 };
@@ -53,6 +58,10 @@ const cancelSubscription = async (req, res) => {
   try {
     const { subscriptionId } = req.body;
     const userId = req.user.id;
+
+    if (!subscriptionId) {
+      return res.status(400).json({ error: 'subscriptionId is required' });
+    }
 
     const subResult = await db.query(
       'SELECT stripe_subscription_id FROM subscriptions WHERE id = $1 AND user_id = $2',
@@ -72,6 +81,7 @@ const cancelSubscription = async (req, res) => {
 
     res.json({ message: 'Subscription cancelled' });
   } catch (error) {
+    console.error('cancelSubscription error:', error);
     res.status(500).json({ error: 'Failed to cancel subscription' });
   }
 };
@@ -92,6 +102,7 @@ const getSubscription = async (req, res) => {
 
     res.json({ subscription: result.rows[0] });
   } catch (error) {
+    console.error('getSubscription error:', error);
     res.status(500).json({ error: 'Failed to get subscription' });
   }
 };

@@ -14,6 +14,7 @@ const getAllStreams = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getAllStreams error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -37,6 +38,7 @@ const getStreamById = async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('getStreamById error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -63,6 +65,7 @@ const createStream = async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
+    console.error('createStream error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -101,6 +104,7 @@ const updateStream = async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('updateStream error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -142,6 +146,7 @@ const endStream = async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('endStream error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -163,6 +168,7 @@ const getStreamAnalytics = async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (error) {
+    console.error('getStreamAnalytics error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

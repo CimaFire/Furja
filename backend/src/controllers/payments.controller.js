@@ -11,10 +11,14 @@ const createPaymentIntent = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    if (typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ error: 'Amount must be a positive number' });
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100),
       currency,
-      metadata: { userId }
+      metadata: { userId: String(userId) }
     });
 
     // Save to database
@@ -29,6 +33,7 @@ const createPaymentIntent = async (req, res) => {
       paymentIntentId: paymentIntent.id
     });
   } catch (error) {
+    console.error('createPaymentIntent error:', error);
     res.status(500).json({ error: 'Failed to create payment intent' });
   }
 };
@@ -38,6 +43,10 @@ const confirmPayment = async (req, res) => {
   try {
     const { paymentIntentId } = req.body;
     const userId = req.user.id;
+
+    if (!paymentIntentId) {
+      return res.status(400).json({ error: 'Payment intent ID is required' });
+    }
 
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
@@ -49,9 +58,10 @@ const confirmPayment = async (req, res) => {
 
       res.json({ message: 'Payment confirmed', status: 'succeeded' });
     } else {
-      res.status(400).json({ error: 'Payment not completed' });
+      res.status(400).json({ error: 'Payment not completed', status: paymentIntent.status });
     }
   } catch (error) {
+    console.error('confirmPayment error:', error);
     res.status(500).json({ error: 'Failed to confirm payment' });
   }
 };
@@ -73,6 +83,7 @@ const getPaymentHistory = async (req, res) => {
 
     res.json(result.rows);
   } catch (error) {
+    console.error('getPaymentHistory error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -81,6 +92,11 @@ const getPaymentHistory = async (req, res) => {
 const handleWebhook = async (req, res) => {
   try {
     const sig = req.headers['stripe-signature'];
+
+    if (!sig) {
+      return res.status(400).json({ error: 'Missing stripe-signature header' });
+    }
+
     const event = stripe.webhooks.constructEvent(
       req.body,
       sig,
@@ -90,14 +106,15 @@ const handleWebhook = async (req, res) => {
     if (event.type === 'payment_intent.succeeded') {
       const paymentIntent = event.data.object;
       await db.query(
-        'UPDATE payments SET status = "completed" WHERE transaction_id = $1',
+        "UPDATE payments SET status = 'completed' WHERE transaction_id = $1",
         [paymentIntent.id]
       );
     }
 
     res.json({ received: true });
   } catch (error) {
-    res.status(400).json({ error: 'Webhook error' });
+    console.error('handleWebhook error:', error);
+    res.status(400).json({ error: 'Webhook signature verification failed' });
   }
 };
 
