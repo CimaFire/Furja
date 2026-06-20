@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiUsers, FiTrendingUp } from 'react-icons/fi';
+import { FiUsers } from 'react-icons/fi';
 
 function StreamCard({ stream }) {
   return (

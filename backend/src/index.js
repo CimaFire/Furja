@@ -36,6 +36,9 @@ app.use('/api/messages', require('./routes/messages.routes'));
 app.use('/api/gifts', require('./routes/gifts.routes'));
 app.use('/api/payments', require('./routes/payments.routes'));
 app.use('/api/analytics', require('./routes/analytics.routes'));
+app.use('/api/games', require('./routes/games.routes'));
+app.use('/api/agencies', require('./routes/agencies.routes'));
+app.use('/api/currency', require('./routes/currency.routes'));
 
 // Health Check
 app.get('/health', (req, res) => {

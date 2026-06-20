@@ -90,7 +90,7 @@ const handleWebhook = async (req, res) => {
     if (event.type === 'payment_intent.succeeded') {
       const paymentIntent = event.data.object;
       await db.query(
-        'UPDATE payments SET status = "completed" WHERE transaction_id = $1',
+        "UPDATE payments SET status = 'completed' WHERE transaction_id = $1",
         [paymentIntent.id]
       );
     }

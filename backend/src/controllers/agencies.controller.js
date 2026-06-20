@@ -182,7 +182,9 @@ const withdrawEarnings = async (req, res) => {
 
     // Mark as withdrawn
     await db.query(
-      `UPDATE agency_earnings SET withdrawn = true WHERE agency_id = $1 AND withdrawn = false LIMIT $2`,
+      `UPDATE agency_earnings SET withdrawn = true WHERE id IN (
+        SELECT id FROM agency_earnings WHERE agency_id = $1 AND withdrawn = false LIMIT $2
+      )`,
       [agencyId, Math.floor(amount)]
     );
 

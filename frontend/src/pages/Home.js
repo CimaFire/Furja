@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { streamsService } from '../../services/api';
-import { setStreams, setLoading } from '../../store/slices/streamsSlice';
-import StreamCard from '../Stream/StreamCard';
+import { streamsService } from '../services/api';
+import { setStreams, setLoading } from '../store/slices/streamsSlice';
+import StreamCard from '../components/Stream/StreamCard';
 
 function Home() {
   const dispatch = useDispatch();
